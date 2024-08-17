@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import type { ThirdwebClient } from "../../../../client/client.js";
 import { getContract } from "../../../../contract/contract.js";
-import { resolveAddress as resolveEnsAddress } from "../../../../extensions/ens/resolve-address.js";
+import { resolveAddress } from "../../../../extensions/ens/resolve-address.js";
 import { transfer } from "../../../../extensions/erc20/write/transfer.js";
-import { resolveAddress as resolveLensAddress } from "../../../../extensions/lens/read/resolveAddress.js";
 import { sendTransaction } from "../../../../transaction/actions/send-transaction.js";
 import { prepareTransaction } from "../../../../transaction/prepare-transaction.js";
+import { isAddress } from "../../../../utils/address.js";
 import { toWei } from "../../../../utils/units.js";
 import { useActiveWallet } from "./useActiveWallet.js";
 
@@ -50,28 +50,26 @@ export function useSendToken(client: ThirdwebClient) {
         throw new Error("No active account");
       }
 
+      // input validation
+      if (
+        !receiverAddress ||
+        (!receiverAddress.endsWith(".eth") && !isAddress(receiverAddress))
+      ) {
+        throw new Error("Invalid address");
+      }
+
       if (!amount || Number.isNaN(Number(amount)) || Number(amount) < 0) {
         throw new Error("Invalid amount");
       }
 
       let to = receiverAddress;
-      // resolve ENS or Lens handle if needed
-      // There will never be a Lens handle that is the same as an ENS because Lens does not allow "." to be in the name
-      // so we can avoid the scenario where there is a "vitalik.eth" for ENS and there is a "vitalik.eth" for Lens
-      // and each is owned by a different person.
-      const [ensAddress, lensAddress] = await Promise.all([
-        resolveEnsAddress({
+      // resolve ENS if needed
+      try {
+        to = await resolveAddress({
           client,
           name: receiverAddress,
-        }).catch(() => ""),
-        resolveLensAddress({
-          client,
-          handleOrLocalName: receiverAddress,
-        }).catch(() => ""),
-      ]);
-      to = ensAddress || lensAddress;
-
-      if (!to) {
+        });
+      } catch (e) {
         throw new Error("Failed to resolve address");
       }
 
