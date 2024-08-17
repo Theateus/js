@@ -12,4 +12,12 @@ describe("resolve lens address", () => {
     // "captain_jack" is a valid localname so it should definitely resolve to a valid address
     expect(isAddress(address)).toBe(true);
   });
+
+  it("should throw if passed an invalid lens handle", async () => {
+    await expect(() =>
+      resolveAddress({ client: TEST_CLIENT, name: "vitalik.eth" }),
+    ).rejects.toThrowError(
+      "Could not fetch the wallet address for lens handle: vitalik.eth",
+    );
+  });
 });
