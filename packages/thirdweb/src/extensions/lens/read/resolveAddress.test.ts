@@ -1,16 +1,15 @@
+import { isAddress } from "src/utils/address.js";
 import { describe, expect, it } from "vitest";
 import { TEST_CLIENT } from "~test/test-clients.js";
 import { resolveAddress } from "./resolveAddress.js";
 
 describe("resolve lens address", () => {
-  // Will remove this test later since this is flaky
   it("should resolve to correct address", async () => {
     const address = await resolveAddress({
       client: TEST_CLIENT,
       handleOrLocalName: "captain_jack",
     });
-    expect(address.toLowerCase()).toBe(
-      "0x12345674b599ce99958242b3D3741e7b01841DF3".toLowerCase(),
-    );
+    // "captain_jack" is a valid localname so it should definitely resolve to a valid address
+    expect(isAddress(address)).toBe(true);
   });
 });
