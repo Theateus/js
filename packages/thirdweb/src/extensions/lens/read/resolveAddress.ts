@@ -6,10 +6,28 @@ import { getAddress, isAddress } from "../../../utils/address.js";
  * @extension LENS
  */
 export type ResolveLensAddressParams = {
-  handleOrLocalName: string;
+  /**
+   * Either a full lens handle, or a lens localName
+   * Examples:
+   * 1. Full handle: "lens/vitalik"
+   * 2. Just local name: "vitalik"
+   */
+  name: string;
+  /**
+   * a [`ThirdwebClient`](https://portal.thirdweb.com/references/typescript/v5/ThirdwebClient)
+   */
   client: ThirdwebClient;
+  /**
+   * Override parameters for Lens contract, defaults to LensHandle contract on Polygon
+   */
   overrides?: {
-    lensHandleAddress?: string;
+    /**
+     * The contract address of the [`LensHandle contract`](https://www.lens.xyz/docs/resources/smart-contracts)
+     */
+    lensHandleContractAddress?: string;
+    /**
+     * The chain which `lensHandleContractAddress` is deployed on
+     */
     chain?: Chain;
   };
 };
@@ -22,13 +40,18 @@ export type ResolveLensAddressParams = {
  * ```ts
  * import { resolveAddress } from "thirdweb/extensions/lens";
  *
- * const walletAddress = await resolveAddress("vitalik");
+ * const walletAddress = await resolveAddress({
+ *   name: "vitalik",
+ *   client,
+ * });
  * ```
  */
-export async function resolveAddress(options: ResolveLensAddressParams) {
-  const { handleOrLocalName, overrides, client } = options;
-  if (isAddress(handleOrLocalName)) {
-    return getAddress(handleOrLocalName);
+export async function resolveAddress(
+  options: ResolveLensAddressParams,
+): Promise<string> {
+  const { name, overrides, client } = options;
+  if (isAddress(name)) {
+    return getAddress(name);
   }
   const [
     { getContract },
@@ -44,7 +67,7 @@ export async function resolveAddress(options: ResolveLensAddressParams) {
     import("../consts.js"),
   ]);
   const contract = getContract({
-    address: overrides?.lensHandleAddress || LENS_HANDLE_ADDRESS,
+    address: overrides?.lensHandleContractAddress || LENS_HANDLE_ADDRESS,
     chain: overrides?.chain || polygon,
     client,
   });
@@ -58,12 +81,10 @@ export async function resolveAddress(options: ResolveLensAddressParams) {
    * if the string contains "/", it is either invalid, or it definitely contains the namespace
    * In that case we remove the possible namespace because the `getTokenId` method only accepts localName
    */
-  const isPossibleHandle = handleOrLocalName.includes("/");
-  const localName = isPossibleHandle
-    ? handleOrLocalName.split("/")[1]
-    : handleOrLocalName;
+  const isPossibleHandle = name.includes("/");
+  const localName = isPossibleHandle ? name.split("/")[1] : name;
   if (!localName) {
-    throw new Error(`missing local name from ${handleOrLocalName}`);
+    throw new Error(`missing local name from ${name}`);
   }
   const tokenId = await getTokenId({ contract, localName });
   if (!tokenId) {
@@ -75,6 +96,11 @@ export async function resolveAddress(options: ResolveLensAddressParams) {
    * `getTokenId` still returns you a tokenId - so never rely on the result alone.
    * Check if the tokenId truly exists using `exists` or in this case, `ownerOf`
    */
-
-  return await ownerOf({ contract, tokenId });
+  const address = await ownerOf({ contract, tokenId }).catch(() => "");
+  if (!address) {
+    throw new Error(
+      `Could not fetch the owner address for tokenId: ${tokenId}`,
+    );
+  }
+  return address;
 }
