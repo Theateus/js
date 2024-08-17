@@ -1,6 +1,6 @@
-import { isAddress } from "src/utils/address.js";
 import { describe, expect, it } from "vitest";
 import { TEST_CLIENT } from "~test/test-clients.js";
+import { isAddress } from "../../../utils/address.js";
 import { resolveAddress } from "./resolveAddress.js";
 
 describe("resolve lens address", () => {
