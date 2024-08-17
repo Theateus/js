@@ -1,8 +1,8 @@
-import type { AuthType } from "@passwordless-id/webauthn/dist/esm/types.js";
+import type { Chain } from "../../../../chains/types.js";
 import type { ThirdwebClient } from "../../../../client/client.js";
 import type { Address } from "../../../../utils/address.js";
-import type { InjectedSupportedWalletIds } from "../../../../wallets/__generated__/wallet-ids.js";
 import type { Account } from "../../../interfaces/wallet.js";
+import type { Wallet } from "../../../interfaces/wallet.js";
 import type { AuthOption, SocialAuthOption } from "../../../types.js";
 import type { Ecosystem } from "../../web/types.js";
 
@@ -37,14 +37,28 @@ export type SingleStepAuthArgsType =
   | { strategy: "iframe" }
   | {
       strategy: "passkey";
+      /**
+       * Whether to create a new passkey (sign up) or login to an existing one (sign in).
+       * You can use `hasStoredPasskey()` to check if a user has previously logged in with a passkey on this device.
+       */
       type: "sign-up" | "sign-in";
+      /**
+       * Optional name of the passkey to create, defaults to a generated name
+       */
       passkeyName?: string;
-      authenticatorType?: AuthType;
+      /**
+       * Optional domain, defaults to current window location.
+       * NOTE: this is required on native platforms.
+       */
+      domain?: {
+        displayName: string;
+        hostname: string;
+      };
     }
   | {
-      strategy: "siwe";
-      walletId: InjectedSupportedWalletIds;
-      chainId: number;
+      strategy: "wallet";
+      wallet: Wallet;
+      chain: Chain;
     };
 
 export type AuthArgsType = (MultiStepAuthArgsType | SingleStepAuthArgsType) & {

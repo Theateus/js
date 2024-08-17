@@ -77,7 +77,6 @@ export const MismatchButton = forwardRef<HTMLButtonElement, ButtonProps>(
     const wallet = useActiveWallet();
     const activeWalletChain = useActiveWalletChain();
     const [dialog, setDialog] = useState<undefined | "no-funds" | "pay">();
-
     const { theme } = useTheme();
     const evmBalance = useWalletBalance({
       address: account?.address,
@@ -122,6 +121,12 @@ export const MismatchButton = forwardRef<HTMLButtonElement, ButtonProps>(
               loadingText={loadingText}
               onClick={(e) => {
                 e.stopPropagation();
+
+                if (networksMismatch) {
+                  eventRef.current = e;
+                  return;
+                }
+
                 if (notEnoughBalance) {
                   trackEvent({
                     category: "no-funds",
@@ -130,11 +135,6 @@ export const MismatchButton = forwardRef<HTMLButtonElement, ButtonProps>(
                   });
                   setDialog("no-funds");
                   return;
-                }
-
-                if (networksMismatch) {
-                  eventRef.current = e;
-                  return undefined;
                 }
 
                 if (onClick) {
@@ -199,7 +199,14 @@ export const MismatchButton = forwardRef<HTMLButtonElement, ButtonProps>(
               {dialog === "no-funds" && (
                 <NoFundsDialogContent
                   chain={activeWalletChain}
-                  openPayModal={() => setDialog("pay")}
+                  openPayModal={() => {
+                    trackEvent({
+                      category: "pay",
+                      action: "buy",
+                      label: "attempt",
+                    });
+                    setDialog("pay");
+                  }}
                   onCloseModal={() => setDialog(undefined)}
                 />
               )}
@@ -210,6 +217,37 @@ export const MismatchButton = forwardRef<HTMLButtonElement, ButtonProps>(
                   theme={getSDKTheme(theme === "dark" ? "dark" : "light")}
                   className="!w-auto"
                   payOptions={{
+                    onPurchaseSuccess(info) {
+                      if (
+                        info.type === "crypto" &&
+                        info.status.status !== "NOT_FOUND"
+                      ) {
+                        trackEvent({
+                          category: "pay",
+                          action: "buy",
+                          label: "success",
+                          type: info.type,
+                          chainId: info.status.quote.toToken.chainId,
+                          tokenAddress: info.status.quote.toToken.tokenAddress,
+                          amount: info.status.quote.toAmount,
+                        });
+                      }
+
+                      if (
+                        info.type === "fiat" &&
+                        info.status.status !== "NOT_FOUND"
+                      ) {
+                        trackEvent({
+                          category: "pay",
+                          action: "buy",
+                          label: "success",
+                          type: info.type,
+                          chainId: info.status.quote.toToken.chainId,
+                          tokenAddress: info.status.quote.toToken.tokenAddress,
+                          amount: info.status.quote.estimatedToTokenAmount,
+                        });
+                      }
+                    },
                     prefillBuy: {
                       chain: activeWalletChain,
                     },
@@ -321,7 +359,7 @@ function GetFundsFromFaucet(props: {
   chain: ChainMetadata;
 }) {
   // TODO - improvement for later -> estimate gas required for transaction, and use that as the amount to give
-  const amountToGive = "0.1";
+  const amountToGive = "0.01";
 
   return (
     <div className="border border-border px-4 py-6 rounded-lg flex justify-center">
