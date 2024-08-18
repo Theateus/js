@@ -6,6 +6,17 @@ import type { TransactionReceipt } from "../../../../transaction/types.js";
 import { useActiveAccount } from "../wallets/useActiveAccount.js";
 
 /**
+ * Configuration for the `useSendTransaction` hook.
+ */
+export type SendAndConfirmTransactionConfig = {
+  /**
+   * Configuration for gasless transactions.
+   * Refer to [`GaslessOptions`](https://portal.thirdweb.com/references/typescript/v5/GaslessOptions) for more details.
+   */
+  gasless?: GaslessOptions;
+};
+
+/**
  * A hook to send a transaction.
  * @returns A mutation object to send a transaction.
  * @example
@@ -17,31 +28,27 @@ import { useActiveAccount } from "../wallets/useActiveAccount.js";
  * sendAndConfirmTx(tx);
  * ```
  *
- * 
+ *
  * ### Gasless usage with [thirdweb Engine](https://portal.thirdweb.com/engine)
  * ```tsx
  * import { useSendAndConfirmTransaction } from "thirdweb/react";
- * const { mutate: sendAndConfirmTx, data: transactionReceipt } = useSendAndConfirmTransaction();
- * ...
- * const transaction = mintTo("...");
- * <button
- *   onClick={() => sendAndConfirmTx(transaction, {
+ * const mutation = useSendAndConfirmTransaction({
+ *   gasless: {
  *     provider: "engine",
  *     relayerUrl: "https://thirdweb.engine-***.thirdweb.com/relayer/***",
  *     relayerForwarderAddress: "0x...",
- *   })}
- * >Mint</button>
+ *   }
+ * });
  * ```
  * @transaction
  */
-export function useSendAndConfirmTransaction(): UseMutationResult<
-  TransactionReceipt,
-  Error,
-  PreparedTransaction
-> {
+export function useSendAndConfirmTransaction(
+  config: SendAndConfirmTransactionConfig = {},
+): UseMutationResult<TransactionReceipt, Error, PreparedTransaction> {
   const account = useActiveAccount();
+  const { gasless } = config;
   return useMutation({
-    mutationFn: async (transaction, gasless?: GaslessOptions) => {
+    mutationFn: async (transaction) => {
       if (!account) {
         throw new Error("No active account");
       }
