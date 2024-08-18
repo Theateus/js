@@ -1,4 +1,5 @@
 import { type UseMutationResult, useMutation } from "@tanstack/react-query";
+import type { GaslessOptions } from "../../../../transaction/actions/gasless/types.js";
 import { sendAndConfirmTransaction } from "../../../../transaction/actions/send-and-confirm-transaction.js";
 import type { PreparedTransaction } from "../../../../transaction/prepare-transaction.js";
 import type { TransactionReceipt } from "../../../../transaction/types.js";
@@ -24,13 +25,14 @@ export function useSendAndConfirmTransaction(): UseMutationResult<
 > {
   const account = useActiveAccount();
   return useMutation({
-    mutationFn: async (transaction) => {
+    mutationFn: async (transaction, gasless?: GaslessOptions) => {
       if (!account) {
         throw new Error("No active account");
       }
       return await sendAndConfirmTransaction({
         transaction,
         account,
+        gasless,
       });
     },
   });
