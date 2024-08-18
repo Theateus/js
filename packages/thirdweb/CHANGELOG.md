@@ -1,5 +1,13 @@
 # thirdweb
 
+## 5.47.1
+
+### Patch Changes
+
+- [#4154](https://github.com/thirdweb-dev/js/pull/4154) [`9133b45`](https://github.com/thirdweb-dev/js/commit/9133b45700cfe50bb275bb8ef676491f9e39fd5d) Thanks [@kien-ngo](https://github.com/kien-ngo)! - Update tsdocs for Vote extensions
+
+- [#4163](https://github.com/thirdweb-dev/js/pull/4163) [`fc8daaa`](https://github.com/thirdweb-dev/js/commit/fc8daaa2bc469c04ee62182e5813ad7c78d101ec) Thanks [@kien-ngo](https://github.com/kien-ngo)! - Export util method: isBytes
+
 ## 5.47.0
 
 ### Minor Changes
