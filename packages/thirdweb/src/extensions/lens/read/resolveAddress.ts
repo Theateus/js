@@ -1,5 +1,6 @@
 import type { Chain } from "../../../chains/types.js";
 import type { ThirdwebClient } from "../../../client/client.js";
+import { ZERO_ADDRESS } from "../../../constants/addresses.js";
 import { getAddress, isAddress } from "../../../utils/address.js";
 import { withCache } from "../../../utils/promise/withCache.js";
 
@@ -101,8 +102,10 @@ export async function resolveAddress(
        * `getTokenId` still returns you a tokenId - so never rely on the result alone.
        * Check if the tokenId truly exists using `exists` or in this case, `ownerOf`
        */
-      const address = await ownerOf({ contract, tokenId }).catch(() => "");
-      if (!address) {
+      const address = await ownerOf({ contract, tokenId }).catch(
+        () => ZERO_ADDRESS,
+      );
+      if (address === ZERO_ADDRESS) {
         throw new Error(
           `Could not fetch the wallet address for lens handle: ${name}`,
         );
