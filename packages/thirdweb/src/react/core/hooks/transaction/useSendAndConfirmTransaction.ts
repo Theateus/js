@@ -16,6 +16,22 @@ import { useActiveAccount } from "../wallets/useActiveAccount.js";
  * // later
  * sendAndConfirmTx(tx);
  * ```
+ *
+ * 
+ * ### Gasless usage with [thirdweb Engine](https://portal.thirdweb.com/engine)
+ * ```tsx
+ * import { useSendAndConfirmTransaction } from "thirdweb/react";
+ * const { mutate: sendAndConfirmTx, data: transactionReceipt } = useSendAndConfirmTransaction();
+ * ...
+ * const transaction = mintTo("...");
+ * <button
+ *   onClick={() => sendAndConfirmTx(transaction, {
+ *     provider: "engine",
+ *     relayerUrl: "https://thirdweb.engine-***.thirdweb.com/relayer/***",
+ *     relayerForwarderAddress: "0x...",
+ *   })}
+ * >Mint</button>
+ * ```
  * @transaction
  */
 export function useSendAndConfirmTransaction(): UseMutationResult<
